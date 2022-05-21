@@ -12,6 +12,33 @@ Then, install the dependencies.
 
 `poetry install` or `pip3 install -r requirements.txt`
 
+## Export Data using API
+
+1. Run `docker compose up` to start a docker container which runs a webserver
+2. Make following request to start export. Replace API_KEY and CONTRACT_ADDRESS
+
+```bash
+curl -X POST -H 'Content-Type: application/json' -d '{"args": ["--alchemy-api-key", "API_KEY", "--contract-address", "CONTRACT_ADDRESS"]}' http://localhost:4000/commands/export_data
+```
+
+This will return a response like
+
+```bash
+{"key":"412a9d87","result_url":"http://localhost:4000/commands/export_data?key=412a9d87&wait=false","status":"running"}
+```
+
+When you hit the above URL you will get the status of the job which will be running or finished.
+
+```bash
+curl http://localhost:4000/commands/export_data?key=412a9d87&wait=false
+```
+
+When the job is finished you can download the files (sales, transfers, logs) from the URL
+
+```bash
+curl http://localhost:4000/download/sales_CONTRACT_ADDRESS.csv
+```
+
 ## Export Data
 
 If you're using poetry, remember to prepend this command with `poetry run` or activate the appropriate environment with `poetry shell` while in the `nft-analyst-starter-pack` directory. You can learn more about poetry and how to properly install it [here](https://python-poetry.org/docs/). If using Docker you can spin up a containerized environment with `docker-compose up` and cd into the container to run commands from the CLI. You can learn more about Docker Compose [here](https://docs.docker.com/compose/).

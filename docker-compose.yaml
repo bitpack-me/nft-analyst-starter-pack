@@ -1,11 +1,14 @@
 version: "3.4"
 
 services:
-  block_explorer:
+  exporter:
     build:
-      context: ./
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "4000:4000"
     volumes:
-      - ./:/app
-    command: "python utils/simplehttp.py"
+      - exporter:/app
+    container_name: exporter
+volumes:
+  exporter:
