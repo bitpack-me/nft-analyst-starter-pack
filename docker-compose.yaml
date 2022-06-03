@@ -7,8 +7,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - "4000:4000"
-    volumes:
-      - exporter:/app
     container_name: exporter
-volumes:
-  exporter:
