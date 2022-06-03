@@ -9,5 +9,8 @@ services:
       - "4000:4000"
     container_name: exporter
     restart: always
-    networks:
-      - rh-api
+
+networks:
+  default:
+    name: rh-api-network
+    external: true
