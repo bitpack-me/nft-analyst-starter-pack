@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import warnings
+import json
 from datetime import datetime, timedelta
 
 import click
@@ -205,7 +206,11 @@ def export_data(contract_address, alchemy_api_key):
             current_block_number=end_block,
         )
 
-        print("Data exported to transfers.csv, sales.csv and metadata.csv")
+        print(json.dumps({
+          "sales": sales_csv,
+          "transfers": transfers_csv,
+          "metadata": metadata_csv
+        }))
 
 
 if __name__ == "__main__":
