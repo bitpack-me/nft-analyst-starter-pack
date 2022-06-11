@@ -12,6 +12,7 @@ def clean_up_outputs(dir: Path):
     filetypes = []
     contracts = []
     run_dates = []
+    op_csv_files = []
 
     for c in csv_files:
         filetypes.append(c.split("_")[0].split(".")[0])
@@ -70,3 +71,6 @@ def clean_up_outputs(dir: Path):
         sales_df.sort_values(by=["block_number"], ascending=False).to_csv(
             clean_sales_csv, index=False
         )
+
+        op_csv_files.append([clean_transfers_csv, clean_sales_csv])
+    return op_csv_files

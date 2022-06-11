@@ -34,6 +34,7 @@ from jobs.update_eth_prices import update_eth_prices
 from jobs.cleanup_outputs import clean_up_outputs
 from utils.check_contract_support import check_contract_support
 from utils.extract_unique_column_value import extract_unique_column_value
+from utils.aws_upload import aws_upload
 
 
 # Set click CLI parameters
@@ -52,10 +53,55 @@ from utils.extract_unique_column_value import extract_unique_column_value
     type=str,
     help="The contract address of the desired NFT collection.",
 )
-def export_data(contract_address, alchemy_api_key):
+@click.option(
+  "-x",
+  "--aws-access-key-id",
+  required=True,
+  type=str,
+  help="The AWS access key to use for S3 uploads.",
+)
+@click.option(
+  "-y",
+  "--aws-secret-key",
+  required=True,
+  type=str,
+  help="The AWS secret access key to use for S3 uploads.",
+)
+@click.option(
+  "-b",
+  "--aws-s3-bucket",
+  required=True,
+  type=str,
+  help="The S3 bucket to use for S3 uploads.",
+)
+@click.option(
+  "-r",
+  "--aws-region",
+  required=True,
+  type=str,
+  help="The AWS region to use for S3 uploads.",
+)
+def export_data(contract_address,
+  alchemy_api_key,
+  aws_access_key_id,
+  aws_secret_key,
+  aws_s3_bucket,
+  aws_region):
 
     if (alchemy_api_key is None) or (alchemy_api_key == ""):
         raise Exception("Alchemy API key is required.")
+
+    if (aws_access_key_id is None) or (aws_access_key_id == ""):
+        raise Exception("AWS access key is required.")
+
+    if (aws_secret_key is None) or (aws_secret_key == ""):
+        raise Exception("AWS secret key is required.")
+
+    if (aws_s3_bucket is None) or (aws_s3_bucket == ""):
+        raise Exception("AWS S3 bucket is required.")
+
+    if (aws_region is None) or (aws_region == ""):
+        raise Exception("AWS region is required.")
 
     # Convert address to checksummed address (a specific pattern of uppercase and lowercase letters)
     contract_address = Web3.toChecksumAddress(contract_address)
@@ -193,7 +239,7 @@ def export_data(contract_address, alchemy_api_key):
 
         # Consolidate sales and transfers data into final outputs
         # Perform only for this contract
-        clean_up_outputs(dir)
+        op_transfer_csv, op_sales_csv = clean_up_outputs(dir)[0]
 
         # Fetch metadata
         get_metadata_for_collection(
@@ -213,6 +259,18 @@ def export_data(contract_address, alchemy_api_key):
         export_update_logs(
             update_log_file=updates_csv,
             current_block_number=end_block,
+        )
+
+        # Move files to appropriate locations
+        aws_upload([
+            op_transfer_csv,
+            op_sales_csv,
+            metadata_csv
+          ],
+          aws_access_key_id=aws_access_key_id,
+          aws_secret_access_key=aws_secret_key,
+          bucket=aws_s3_bucket,
+          region_name=aws_region
         )
 
         print(json.dumps({
