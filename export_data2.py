@@ -262,7 +262,7 @@ def export_data(contract_address,
         )
 
         # Move files to appropriate locations
-        aws_upload([
+        response_aws = aws_upload([
             op_transfer_csv,
             op_sales_csv,
             metadata_csv
@@ -274,7 +274,8 @@ def export_data(contract_address,
         )
 
         print(json.dumps({
-          "success": True
+          "success": True,
+          "aws": response_aws
         }))
 
 

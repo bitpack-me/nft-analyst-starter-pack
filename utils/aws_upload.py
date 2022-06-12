@@ -14,7 +14,6 @@ def aws_upload(files: List[str],
     """
     Uploads a list of files to S3.
     """
-    print(files)
     client = boto3.client(
       's3',
       region_name=region_name,
@@ -22,8 +21,16 @@ def aws_upload(files: List[str],
       aws_secret_access_key=aws_secret_access_key
     )
 
-    for file in files:
+    response = {}
+
+    _files = [str(x) for x in files]
+
+    for file in _files:
       try:
-        client.upload_file(str(file), bucket, os.path.basename(file))
+        client.upload_file(file, bucket, os.path.basename(file).lower())
+        response[file] = True
       except ClientError as e:
         print(e)
+        response[file] = False
+
+    return response

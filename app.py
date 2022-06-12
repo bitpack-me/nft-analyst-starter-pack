@@ -22,7 +22,7 @@ def my_callback_fn(context, future):
   print(context, future.result())
 
 shell2http.register_command(endpoint="export_data",
-  command_name="python3 export_data.py",
+  command_name="python3 export_data2.py",
   callback_fn=my_callback_fn,
   decorators=[]
 )
