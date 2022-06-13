@@ -27,7 +27,7 @@ def aws_upload(files: List[str],
 
     for file in _files:
       try:
-        client.upload_file(file, bucket, os.path.basename(file).lower())
+        client.upload_file(file, bucket, os.path.basename(file))
         response[file] = True
       except ClientError as e:
         print(e)
