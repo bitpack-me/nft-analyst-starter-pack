@@ -1,15 +1,18 @@
+from pathlib import Path
 import pandas as pd
 import os
 
 
-def clean_up_outputs():
+def clean_up_outputs(dir: Path):
 
     # Find all csv files and organize by data type, contract, and run date
-    csv_files = [f for f in os.listdir(".") if f.endswith(".csv")]
+    csv_files = [f for f in os.listdir(dir) if f.endswith(".csv")]
+    print(csv_files)
 
     filetypes = []
     contracts = []
     run_dates = []
+    op_csv_files = []
 
     for c in csv_files:
         filetypes.append(c.split("_")[0].split(".")[0])
@@ -28,6 +31,7 @@ def clean_up_outputs():
             "file": csv_files,
         }
     )
+    print(df)
 
     # Get unique contracts with existing sales or transfer data
     unique_contracts = df[
@@ -36,8 +40,10 @@ def clean_up_outputs():
 
     # Consolidate sales and transfers data into final output CSVs
     for uc in unique_contracts:
-        clean_sales_csv = "sales_" + uc + ".csv"
-        clean_transfers_csv = "transfers_" + uc + ".csv"
+        print(uc)
+        clean_sales_csv = dir.joinpath("sales_" + uc + ".csv")
+        clean_transfers_csv = dir.joinpath("transfers_" + uc + ".csv")
+        print(clean_transfers_csv, clean_sales_csv)
 
         sales_df = pd.DataFrame()
         transfers_df = pd.DataFrame()
@@ -48,16 +54,15 @@ def clean_up_outputs():
         sales_files = df[(df["contract"] == uc) & (df["filetype"] == "sales")]["file"]
 
         for t in transfer_files:
-            transfers_df = pd.concat([transfers_df, pd.read_csv(t)])
+            transfers_df = pd.concat([transfers_df, pd.read_csv(dir.joinpath(t))])
 
         for s in sales_files:
-            sales_df = pd.concat([sales_df, pd.read_csv(s)])
+            sales_df = pd.concat([sales_df, pd.read_csv(dir.joinpath(s))])
 
-        # Remove historical files
         for s in sales_files:
-            os.remove(s)
+            os.remove(dir.joinpath(s))
         for t in transfer_files:
-            os.remove(t)
+            os.remove(dir.joinpath(t))
 
         # Export to final output csv files
         transfers_df.sort_values(by=["block_number"], ascending=False).to_csv(
@@ -66,3 +71,6 @@ def clean_up_outputs():
         sales_df.sort_values(by=["block_number"], ascending=False).to_csv(
             clean_sales_csv, index=False
         )
+
+        op_csv_files.append([clean_transfers_csv, clean_sales_csv])
+    return op_csv_files
