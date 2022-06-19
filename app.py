@@ -27,6 +27,12 @@ shell2http.register_command(endpoint="export_data",
   decorators=[]
 )
 
+shell2http.register_command(endpoint="export_eoa",
+  command_name="python3 export_eoa.py",
+  callback_fn=my_callback_fn,
+  decorators=[]
+)
+
 shell2http.register_command(endpoint="echo",
   command_name="echo",
   callback_fn=my_callback_fn,
