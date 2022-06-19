@@ -160,7 +160,9 @@ def export_data(contract_address,
         delete=False
     ) as token_ids_txt, tempfile.NamedTemporaryFile(
         delete=False
-    ) as raw_attributes_csv:
+    ) as raw_attributes_csv, tempfile.NamedTemporaryFile(
+      delete=False
+    ) as media_csv:
 
         # Export token transfers
         export_token_transfers(
@@ -246,11 +248,13 @@ def export_data(contract_address,
             api_key=alchemy_api_key,
             contract_address=contract_address,
             output=raw_attributes_csv.name,
+            output_media=media_csv.name
         )
 
         # Generate metadata output
         generate_metadata_output(
             raw_attributes_file=raw_attributes_csv.name,
+            media_file=media_csv.name,
             token_ids_file=token_ids_txt.name,
             output=metadata_csv,
         )

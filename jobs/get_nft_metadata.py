@@ -20,20 +20,28 @@ async def get_item(client, url, asset_id):
             print("No attributes for asset #" + str(asset_id))
 
         else:
+            other_attrs_raw = item["metadata"]["image"]
+            media_raw = item["media"]
             attributes_raw = item["metadata"]["attributes"]
+            media_df = pd.DataFrame(media_raw)
+            media_df["asset_id"] = asset_id
             attributes_df = pd.DataFrame(attributes_raw)
             attributes_df["asset_id"] = asset_id
             attributes_df = attributes_df[["value", "trait_type", "asset_id"]]
-            return attributes_df
+            return attributes_df, media_df
 
     except:
         print("Request failed for asset #" + str(asset_id) + " (retry pending)")
+        media_df = pd.DataFrame(columns=["thumbnail", "gateway", "raw", "asset_id"])
+        media_df = media_df.concat(
+            {"thumbnail": np.nan, "raw": np.nan, "gateway": np.nan, "asset_id": asset_id},
+            ignore_index=True,
+        )
         attributes_df = pd.DataFrame(columns=["value", "trait_type", "asset_id"])
-        attributes_df = attributes_df.append(
+        attributes_df = attributes_df.concat(
             {"value": np.nan, "trait_type": np.nan, "asset_id": asset_id},
             ignore_index=True,
         )
-        return attributes_df
 
 
 async def get_nft_metadata(token_ids_filename, api_key, contract_address, output):
@@ -103,11 +111,13 @@ def retry_requests(raw_attributes_filename, api_key, contract_address):
     raw_attributes.to_csv(raw_attributes_filename, index=False)
 
 
-def get_metadata_for_collection(api_key, contract_address, output):
+def get_metadata_for_collection(api_key, contract_address, output, output_media):
     # Method for fetching metadata using Alchemy's getNFTsForCollection endpoint
     print("Fetching NFT metadata...")
 
     raw_attributes = pd.DataFrame(columns=["value", "trait_type", "asset_id"])
+    media_attributes = pd.DataFrame(columns=["thumbnail", "gateway", "raw", "asset_id"])
+
     start_token = None
     process_active = True
 
@@ -140,13 +150,21 @@ def get_metadata_for_collection(api_key, contract_address, output):
                 for nft in nft_list:
                     try:
                         attributes_raw = nft["metadata"]["attributes"]
+                        media_raw = nft["media"]
+                        media_df = pd.DataFrame(media_raw)
+                        media_df["asset_id"] = int(nft["id"]["tokenId"], 16)
                         attributes_df = pd.DataFrame(attributes_raw)
                         attributes_df["asset_id"] = int(nft["id"]["tokenId"], 16)
                         attributes_df = attributes_df[
                             ["value", "trait_type", "asset_id"]
                         ]
-                        raw_attributes = raw_attributes.append(
-                            attributes_df, ignore_index=True
+                        raw_attributes = pd.concat(
+                            [raw_attributes, attributes_df],
+                            ignore_index=True
+                        )
+                        media_attributes = pd.concat(
+                            [media_attributes, media_df],
+                            ignore_index=True
                         )
                     except:
                         continue
@@ -166,3 +184,4 @@ def get_metadata_for_collection(api_key, contract_address, output):
 
     # Output attributes data to CSV file
     raw_attributes.to_csv(output, index=False)
+    media_attributes.to_csv(output_media, index=False)

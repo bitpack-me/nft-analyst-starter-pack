@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 
 
-def generate_metadata_output(raw_attributes_file, token_ids_file, output):
+def generate_metadata_output(raw_attributes_file, media_file, token_ids_file, output):
     # Read from raw attributes file and drop nulls
     raw_attributes = pd.read_csv(raw_attributes_file)
+    media_attributes = pd.read_csv(media_file)
     raw_attributes = raw_attributes[raw_attributes["trait_type"].notnull()]
 
     # Read from token ids file
@@ -89,15 +90,18 @@ def generate_metadata_output(raw_attributes_file, token_ids_file, output):
     for name in distinct_trait_types:
         nft_df = nft_df.merge(df_dict[name], on="asset_id", how="left")
 
+    nft_df = nft_df.merge(media_attributes, on="asset_id", how="left")
+
     base_column_names = ["asset_id", "attribute_count", "attribute_count_rarity_score"]
     trait_column_names = []
+    media_column_names = ["thumbnail", "gateway", "raw"]
 
     for name in distinct_trait_types:
         trait_column_names.append(str(name) + "_attribute")
         trait_column_names.append(str(name))
         trait_column_names.append(str(name) + "_rarity_score")
 
-    column_names = base_column_names + trait_column_names
+    column_names = base_column_names + trait_column_names + media_column_names
     nft_df.columns = column_names
 
     category_none_scores = category_rarity[["trait_type", "category_none_score"]]
