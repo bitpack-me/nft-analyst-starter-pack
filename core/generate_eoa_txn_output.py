@@ -171,6 +171,12 @@ def generate_transactions_output(date_block_mapping_file,eth_prices_file, transa
       date_blocks_df["starting_block"], date_blocks_df["ending_block"], closed="both"
   )
 
+  # get the last block that is supported by this program
+  last_block = date_blocks_df.iloc[-1]["ending_block"]
+
+  # Drop any transactions that have happened after the last block date
+  txn_df = txn_df.loc[txn_df["block_number"] <= last_block]
+
   txn_df["date"] = txn_df["block_number"].apply(
     lambda x: date_blocks_df.iloc[date_blocks_df.index.get_loc(x)]["date"]
   )
