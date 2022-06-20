@@ -13,7 +13,7 @@ def update_eth_prices(filename):
     print("Updating ETH prices...")
 
     # Find today's date
-    t0 = datetime.today().date()
+    t0 = datetime.utcnow().date()
 
     # Read from existing file and find the date last updated
     eth_prices_df = pd.read_csv(filename)
