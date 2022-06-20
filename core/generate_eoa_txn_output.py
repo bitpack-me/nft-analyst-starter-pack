@@ -1,6 +1,8 @@
 import pandas as pd
 import requests
 from time import sleep
+import numpy as np
+from numpy import nan
 
 import json
 import pandas as pd
@@ -177,4 +179,38 @@ def generate_transactions_output(date_block_mapping_file,eth_prices_file, transa
 
   txn_df["value_usd"] = txn_df["value_eth"] * txn_df["price_of_eth"]
 
+  df1 = txn_df['rawContract'].apply(eval).apply(pd.Series).rename(columns={
+    'value': 'rawContract_value',
+    'address': 'contract',
+    'decimal': 'rawContract_decimal'
+  })
+
+  df1['rawContract_value'] = df1['rawContract_value'].apply(lambda x: int(x, 16) if x else 0) \
+    / df1['rawContract_decimal'].apply(lambda x: int(x, 16) if x else 0).apply(lambda x: pow(10, x))
+
+  txn_df = txn_df.join(df1)
+
+  df2 =txn_df['erc1155Metadata']
+  df2 = df2.apply(lambda x: eval(x)[0] if isinstance(x, str) else np.nan)
+  df2 = df2.apply(pd.Series)
+
+  df2['tokenId'] = df2['tokenId'].apply(lambda x: int(x, 16) if isinstance(x, str) else None)
+  df2['value'] = df2['value'].apply(lambda x: int(x, 16) if isinstance(x, str) else 0)
+
+  df2 = df2.rename(columns={
+    'tokenId': '1155token_id',
+    'value': '1155_value',
+  })
+  txn_df = pd.concat([txn_df, df2], axis=1)
+
+  df3 = txn_df[['1155token_id', 'token_id']]\
+    .apply(lambda x: x[0] if not np.isnan(x[0]) else x[1], axis=1)
+
+  txn_df['token_id'] = df3
+
+  txn_df = txn_df.drop(
+    ['rawContract', 'rawContract_decimal', 'erc1155Metadata', 0, '1155token_id']
+    , axis=1)
+
   txn_df.to_csv(output, index=False)
+  print('Created final output file')
