@@ -205,7 +205,7 @@ def generate_transactions_output(date_block_mapping_file,eth_prices_file, transa
 
   df2 = df2.rename(columns={
     'tokenId': '1155token_id',
-    'value': '1155_value',
+    'value': 'value_1155',
   })
   txn_df = pd.concat([txn_df, df2], axis=1)
 
